@@ -19,7 +19,7 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
-HOMEWORK_VERDICTS = {
+HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -70,7 +70,7 @@ def log_and_telegram(bot, message):
 def get_api_answer(current_timestamp):
     """Отправляет запрос к API."""
     logging.info("Получение ответа от сервера")
-    timestamp = current_timestamp - RETRY_TIME
+    timestamp = current_timestamp
     params = {'from_date': timestamp}
     try:
         # Делает запрос к единственному эндпоинту API-сервиса.
@@ -117,7 +117,7 @@ def parse_status(homework):
     В качестве параметра функция получает только один элемент
     из списка домашних работ. В случае успеха, функция возвращает
     подготовленную для отправки в Telegram строку,
-    содержащую один из вердиктов словаря HOMEWORK_VERDICTS.
+    содержащую один из вердиктов словаря HOMEWORK_STATUSES.
     """
     keys = ['status', 'homework_name']
     for key in keys:
@@ -125,11 +125,11 @@ def parse_status(homework):
             message = f'Ключа {key} нет в ответе API'
             raise KeyError(message)
     homework_status = homework['status']
-    if homework_status not in HOMEWORK_VERDICTS:
+    if homework_status not in HOMEWORK_STATUSES:
         message = 'Неизвестный статус домашней работы'
         raise KeyError(message)
     homework_name = homework['homework_name']
-    verdict = HOMEWORK_VERDICTS[homework_status]
+    verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
