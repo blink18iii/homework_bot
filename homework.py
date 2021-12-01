@@ -1,20 +1,20 @@
-from json.decoder import JSONDecodeError
 import logging
 import os
-from pprint import pprint
 import sys
 import time
-from http import HTTPStatus
+from json.decoder import JSONDecodeError
 
 import requests
 import telegram
 from dotenv import load_dotenv
+
 from exceptions import CustomError
+
 load_dotenv()
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-RETRY_TIME = 6
+RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -63,7 +63,6 @@ def log_and_telegram(bot, message):
 
 def get_api_answer(current_timestamp):
     """Отправляет запрос к API."""
-    logger.info("Получение ответа от сервера")
     timestamp = current_timestamp
     params = {'from_date': timestamp}
     try:
@@ -91,7 +90,6 @@ def get_api_answer(current_timestamp):
         raise CustomError(message)
 
 
-
 def check_response(response):
     """
     Проверяет ответ API на корректность.
@@ -104,8 +102,8 @@ def check_response(response):
     if len(response) <= 0:
         message = 'В ответе API нет домашней работы, ты запушил?'
         raise IndexError(message)
-    homework = response.get('homeworks')[0]
-    return homework
+    # homework = response.get('homeworks')[0]
+    return response['homeworks'][0]
 
 
 def parse_status(homework):
@@ -132,7 +130,10 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверяет переменные окружения."""
-    return False if not PRACTICUM_TOKEN or not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID else True
+    return False if not PRACTICUM_TOKEN \
+        or not TELEGRAM_TOKEN \
+        or not TELEGRAM_CHAT_ID\
+        else True
 
 
 def main():
@@ -140,7 +141,7 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = 0
     check_result = check_tokens()
-    if not check_result :
+    if not check_result:
         message = 'Проблемы с переменными окружения'
         logger.critical(message)
         raise SystemExit(message)
