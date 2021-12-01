@@ -128,10 +128,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверяет переменные окружения."""
-    return False if not PRACTICUM_TOKEN \
-        or not TELEGRAM_TOKEN \
-        or not TELEGRAM_CHAT_ID\
-        else True
+    return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
 
 
 def main():
