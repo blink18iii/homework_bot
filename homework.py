@@ -1,5 +1,7 @@
+from json.decoder import JSONDecodeError
 import logging
 import os
+from pprint import pprint
 import sys
 import time
 from http import HTTPStatus
@@ -7,12 +9,12 @@ from http import HTTPStatus
 import requests
 import telegram
 from dotenv import load_dotenv
-
+from exceptions import CustomError
 load_dotenv()
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-RETRY_TIME = 600
+RETRY_TIME = 6
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -35,20 +37,14 @@ logger = logging.getLogger(__name__)
 error_sent_messages = []
 
 
-class CustomError(Exception):
-    """Кастомная ошибка API."""
-
-    pass
-
-
 def send_message(bot, message):
     """отправляем сообщение о статусе задания в телеграм."""
-    logging.debug(f'Отправляем сообщение в телеграм: {message}')
+    logger.debug(f'Отправляем сообщение в телеграм: {message}')
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info(f'Сообщение отправлено: {message}')
     except Exception as e:
-        logging.error(f'Ошибка отправки сообщения: {e}')
+        logger.error(f'Ошибка отправки сообщения: {e}')
 
 
 def log_and_telegram(bot, message):
@@ -67,7 +63,7 @@ def log_and_telegram(bot, message):
 
 def get_api_answer(current_timestamp):
     """Отправляет запрос к API."""
-    logging.info("Получение ответа от сервера")
+    logger.info("Получение ответа от сервера")
     timestamp = current_timestamp
     params = {'from_date': timestamp}
     try:
@@ -82,15 +78,18 @@ def get_api_answer(current_timestamp):
         message = 'API ведет себя незапланированно'
         raise CustomError(message)
     try:
-        if response.status_code != HTTPStatus.OK:
-            message = 'Эндпоинт не отвечает'
-            raise Exception(message)
-    except Exception:
-        message = 'API ведет себя незапланированно'
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as error:
+        message = f'Ошибка при обращении к API: {error}'
         raise CustomError(message)
     # В случае успешного запроса должна вернуть ответ API, преобразовав его
     # из формата JSON к типам данных Python.
-    return response.json()
+    try:
+        return response.json()
+    except JSONDecodeError:
+        message = 'Ответ не в формате JSON'
+        raise CustomError(message)
+
 
 
 def check_response(response):
@@ -98,11 +97,11 @@ def check_response(response):
     Проверяет ответ API на корректность.
     если ответ корректен - выводит список домашних работ.
     """
-    logging.debug('Проверка ответа API на корректность')
+    logger.debug('Проверка ответа API на корректность')
     if not isinstance(response, dict):
         message = 'Ответ API не словарь, а что-то другое'
         raise TypeError(message)
-    if ['homeworks'][0] not in response:
+    if len(response) <= 0:
         message = 'В ответе API нет домашней работы, ты запушил?'
         raise IndexError(message)
     homework = response.get('homeworks')[0]
@@ -133,9 +132,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверяет переменные окружения."""
-    if not PRACTICUM_TOKEN or not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
-        return False
-    return True
+    return False if not PRACTICUM_TOKEN or not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID else True
 
 
 def main():
@@ -143,7 +140,7 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = 0
     check_result = check_tokens()
-    if check_result is False:
+    if not check_result :
         message = 'Проблемы с переменными окружения'
         logger.critical(message)
         raise SystemExit(message)
@@ -161,7 +158,10 @@ def main():
             time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            log_and_telegram(bot, message)
+            error = message
+            logger.error(message, exc_info=True)
+            if error != message:
+                log_and_telegram(bot, message)
             time.sleep(RETRY_TIME)
 
 
