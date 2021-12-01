@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from json.decoder import JSONDecodeError
-
+from http import HTTPStatus
 import requests
 import telegram
 from dotenv import load_dotenv
@@ -76,11 +76,9 @@ def get_api_answer(current_timestamp):
     except Exception:
         message = 'API ведет себя незапланированно'
         raise CustomError(message)
-    try:
+    if response.status_code != HTTPStatus.OK:
         response.raise_for_status()
-    except requests.exceptions.HTTPError as error:
-        message = f'Ошибка при обращении к API: {error}'
-        raise CustomError(message)
+        logger.error(f'Ошибка при обращении к API: {response.status_code}')
     # В случае успешного запроса должна вернуть ответ API, преобразовав его
     # из формата JSON к типам данных Python.
     try:
@@ -102,8 +100,8 @@ def check_response(response):
     if len(response) <= 0:
         message = 'В ответе API нет домашней работы, ты запушил?'
         raise IndexError(message)
-    # homework = response.get('homeworks')[0]
-    return response['homeworks'][0]
+    homework = response.get('homeworks')[0]
+    return homework
 
 
 def parse_status(homework):
