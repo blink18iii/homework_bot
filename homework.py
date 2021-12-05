@@ -2,9 +2,8 @@ import logging
 import os
 import sys
 import time
-from http import HTTPStatus
 from json.decoder import JSONDecodeError
-
+from http import HTTPStatus
 import requests
 import telegram
 from dotenv import load_dotenv
@@ -32,7 +31,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger(__name__)``
+logger = logging.getLogger(__name__)
 
 
 error_sent_messages = []
