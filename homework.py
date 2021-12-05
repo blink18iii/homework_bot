@@ -2,8 +2,9 @@ import logging
 import os
 import sys
 import time
-from json.decoder import JSONDecodeError
 from http import HTTPStatus
+from json.decoder import JSONDecodeError
+
 import requests
 import telegram
 from dotenv import load_dotenv
@@ -31,7 +32,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)``
 
 
 error_sent_messages = []
@@ -63,8 +64,8 @@ def log_and_telegram(bot, message):
 
 def get_api_answer(current_timestamp):
     """Отправляет запрос к API."""
-    timestamp = current_timestamp
-    params = {'from_date': timestamp}
+    # timestamp = current_timestamp
+    params = {'from_date': 0}
     try:
         # Делает запрос к единственному эндпоинту API-сервиса.
         response = requests.get(
