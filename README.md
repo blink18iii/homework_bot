@@ -3,7 +3,7 @@ Telegram-бот, который будет обращаться к API серв�
 ## Технологии:
 <ol>
 <li>Python 3</li>
-<il>Django REST Framework</li>
-<il>SQLite3</li>
-<il>SimpleJWT</li>
+<li>Django REST Framework</li>
+<li>SQLite3</li>
+<li>SimpleJWT</li>
 </ol>
