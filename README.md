@@ -1,3 +1,7 @@
+Для чувствительных данных используем .env с полями - TELEGRAM_TOKEN, TELEGRAM_CHAT_ID.
+TELEGRAM_TOKEN=YOUR_TELEGRAM_TOKEN # Токен вашего бота, полученный через @BotFather
+TELEGRAM_CHAT_ID=YOUR_TELEGRAM_CHAT_ID # Ваш Chat_id, получить можно через @userinfobot
+
 Бот умеет:
 
 <ol>
